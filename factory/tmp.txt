@@ -1,0 +1,36 @@
+writeClauses(Time):-
+    initClauseGeneration,    write(hola), nl, 
+    %defineTH(Time),
+    eachTaskStartsOnce(Time),
+    %noResourceOverlapping(Time),
+    true,!.
+    
+defineTH(Time):-
+  task(T,D,_),
+  availableHour(Hour,T,Time),
+  End is Hour+D-1,
+  between(Hour,End,H),
+  writeClause([\+start-T-Hour, act-T-H]),
+  fail.
+defineTH(_).
+    
+eachTaskStartsOnce(Time):-
+  task(T), findall(start-T-H, availableHour(H,T,Time), Lits), write(Lits), nl, 
+  exactly(1,Lits), fail.
+eachTaskStartsOnce(_).
+
+noResourceOverlapping(Time):-
+  resourceUnits(R,U),
+  hour(H, Time),
+  findall(act-T-H, usesResource(T,R), Lits),
+  atMost(U, Lits),
+  fail.
+noResourceOverlapping(_).
+
+
+
+task(T):-              task(T,_,_).
+duration(T,D):-        task(T,D,_).
+usesResource(T,R):-    task(T,_,L), member(R,L).
+hour(H,Time):-	       between(1,Time,H).
+availableHour(H,T,Time):- task(T,D,_), EndTime is Time-D+1, between(1,EndTime,H).
